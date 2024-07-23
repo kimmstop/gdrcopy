@@ -1,0 +1,1 @@
+cmd_/home/kms/cuda_memcpy_test/gdrcopy/src/gdrdrv/gdrdrv.ko := ld -r  -m elf_x86_64 -z noexecstack   --build-id=sha1  -T scripts/module.lds -o /home/kms/cuda_memcpy_test/gdrcopy/src/gdrdrv/gdrdrv.ko /home/kms/cuda_memcpy_test/gdrcopy/src/gdrdrv/gdrdrv.o /home/kms/cuda_memcpy_test/gdrcopy/src/gdrdrv/gdrdrv.mod.o;  true

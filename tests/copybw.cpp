@@ -98,40 +98,49 @@ void run_test(CUdeviceptr d_A, size_t size)
         cout << "user-space pointer:" << buf_ptr << endl;
 
         // copy to GPU benchmark
-        cout << "writing test, size=" << copy_size << " offset=" << copy_offset << " num_iters=" << num_write_iters << endl;
-        struct timespec beg, end;
-        clock_gettime(MYCLOCK, &beg);
-        for (int iter=0; iter<num_write_iters; ++iter)
-            gdr_copy_to_mapping(mh, buf_ptr + copy_offset/4, init_buf, copy_size);
-        clock_gettime(MYCLOCK, &end);
+        int kms_cnt = 0;
+        while(1){
+            if(kms_cnt == 10)
+                cout << "writing test, size=" << copy_size << " offset=" << copy_offset << " num_iters=" << num_write_iters << endl;
+            struct timespec beg, end;
+            clock_gettime(MYCLOCK, &beg);
+            for (int iter=0; iter<num_write_iters; ++iter)
+                gdr_copy_to_mapping(mh, buf_ptr + copy_offset/4, init_buf, copy_size);
+            clock_gettime(MYCLOCK, &end);
 
-        double woMBps;
-        {
-            double byte_count = (double) copy_size * num_write_iters;
-            double dt_ms = (end.tv_nsec-beg.tv_nsec)/1000000.0 + (end.tv_sec-beg.tv_sec)*1000.0;
-            double Bps = byte_count / dt_ms * 1e3;
-            woMBps = Bps / 1024.0 / 1024.0;
-            cout << "write BW: " << woMBps << "MB/s" << endl;
+            double woMBps;
+            {
+                double byte_count = (double) copy_size * num_write_iters;
+                double dt_ms = (end.tv_nsec-beg.tv_nsec)/1000000.0 + (end.tv_sec-beg.tv_sec)*1000.0;
+                double Bps = byte_count / dt_ms * 1e3;
+                woMBps = Bps / 1024.0 / 1024.0;
+                if(kms_cnt == 10)
+                    cout << "write BW: " << woMBps << "MB/s" << endl;
+            }
+
+            compare_buf(init_buf, buf_ptr + copy_offset/4, copy_size);
+
+            // copy from GPU benchmark
+            if(kms_cnt == 10)
+                cout << "reading test, size=" << copy_size << " offset=" << copy_offset << " num_iters=" << num_read_iters << endl;
+            clock_gettime(MYCLOCK, &beg);
+            for (int iter=0; iter<num_read_iters; ++iter)
+                gdr_copy_from_mapping(mh, init_buf, buf_ptr + copy_offset/4, copy_size);
+            clock_gettime(MYCLOCK, &end);
+
+            double roMBps;
+            {
+                double byte_count = (double) copy_size * num_read_iters;
+                double dt_ms = (end.tv_nsec-beg.tv_nsec)/1000000.0 + (end.tv_sec-beg.tv_sec)*1000.0;
+                double Bps = byte_count / dt_ms * 1e3;
+                roMBps = Bps / 1024.0 / 1024.0;
+                if(kms_cnt == 10){
+                    cout << "read BW: " << roMBps << "MB/s" << endl;
+                    kms_cnt = 0;
+                }
+                kms_cnt+= 1;
+            }
         }
-
-        compare_buf(init_buf, buf_ptr + copy_offset/4, copy_size);
-
-        // copy from GPU benchmark
-        cout << "reading test, size=" << copy_size << " offset=" << copy_offset << " num_iters=" << num_read_iters << endl;
-        clock_gettime(MYCLOCK, &beg);
-        for (int iter=0; iter<num_read_iters; ++iter)
-            gdr_copy_from_mapping(mh, init_buf, buf_ptr + copy_offset/4, copy_size);
-        clock_gettime(MYCLOCK, &end);
-
-        double roMBps;
-        {
-            double byte_count = (double) copy_size * num_read_iters;
-            double dt_ms = (end.tv_nsec-beg.tv_nsec)/1000000.0 + (end.tv_sec-beg.tv_sec)*1000.0;
-            double Bps = byte_count / dt_ms * 1e3;
-            roMBps = Bps / 1024.0 / 1024.0;
-            cout << "read BW: " << roMBps << "MB/s" << endl;
-        }
-
         cout << "unmapping buffer" << endl;
         ASSERT_EQ(gdr_unmap(g, mh, map_d_ptr, size), 0);
 

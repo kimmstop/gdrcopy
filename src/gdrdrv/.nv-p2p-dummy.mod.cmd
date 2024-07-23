@@ -1,0 +1,1 @@
+cmd_/home/kms/cuda_memcpy_test/gdrcopy/src/gdrdrv/nv-p2p-dummy.mod := { echo  /home/kms/cuda_memcpy_test/gdrcopy/src/gdrdrv/nv-p2p-dummy.o;  echo; } > /home/kms/cuda_memcpy_test/gdrcopy/src/gdrdrv/nv-p2p-dummy.mod

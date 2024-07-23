@@ -1,0 +1,1 @@
+cmd_/home/kms/cuda_memcpy_test/gdrcopy/src/gdrdrv/Module.symvers := sed 's/\.ko$$/\.o/' /home/kms/cuda_memcpy_test/gdrcopy/src/gdrdrv/modules.order | scripts/mod/modpost -m -a  -o /home/kms/cuda_memcpy_test/gdrcopy/src/gdrdrv/Module.symvers -e -i Module.symvers   -T -
